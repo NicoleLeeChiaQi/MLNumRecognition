@@ -72,18 +72,13 @@ def evaluate_model(model, test_loader, device="cpu"):
         plt.show()
 
 if __name__ == '__main__':
-    # Test evaluation using a dummy model or Member 2's model
-    print("Loading test dataset...")
+    from model import DigitCNN
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     _, test_loader = get_data_loaders(batch_size=64)
 
-    # If Member 2 hasn't shared their model architecture/weights yet,
-    # you can define a simple placeholder to verify this script runs:
-    class DummyCNN(torch.nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.fc = torch.nn.Linear(28*28, 10)
-        def forward(self, x):
-            return self.fc(x.view(x.size(0), -1))
-
-    dummy_model = DummyCNN()
-    evaluate_model(dummy_model, test_loader)
+    # Load Member 2's trained model
+    model = DigitCNN()
+    model.load_state_dict(torch.load("best_mnist_cnn.pth", map_location=device))
+    
+    evaluate_model(model, test_loader, device=device)

@@ -4,20 +4,14 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix
 import seaborn as sns
 from dataset import get_data_loaders
+from model import DigitCNN
 
 def evaluate_model(model, test_loader, device="cpu"):
-    """
-    Evaluates the model across the test set, prints classification metrics,
-    plots the Confusion Matrix, and visualizes misclassified samples.
-    """
     model.eval()
     model.to(device)
 
-    all_preds = []
-    all_targets = []
-    misclassified_images = []
-    misclassified_preds = []
-    misclassified_targets = []
+    all_preds, all_targets = [], []
+    misclassified_images, misclassified_preds, misclassified_targets = [], [], []
 
     with torch.no_grad():
         for images, labels in test_loader:
@@ -28,11 +22,10 @@ def evaluate_model(model, test_loader, device="cpu"):
             all_preds.extend(preds.cpu().numpy())
             all_targets.extend(labels.cpu().numpy())
 
-            # Collect misclassified examples for visual analysis
             incorrect_mask = (preds != labels)
             if incorrect_mask.any():
                 for img, pred, target in zip(images[incorrect_mask], preds[incorrect_mask], labels[incorrect_mask]):
-                    if len(misclassified_images) < 10:  # store up to 10 examples
+                    if len(misclassified_images) < 10:
                         misclassified_images.append(img.cpu())
                         misclassified_preds.append(pred.item())
                         misclassified_targets.append(target.item())
@@ -40,7 +33,7 @@ def evaluate_model(model, test_loader, device="cpu"):
     all_preds = np.array(all_preds)
     all_targets = np.array(all_targets)
 
-    # 1. Classification Metrics: Precision, Recall, F1 per class
+    # 1. Classification Metrics
     print("\n" + "="*50)
     print("DETAILED CLASSIFICATION REPORT")
     print("="*50)
@@ -57,12 +50,11 @@ def evaluate_model(model, test_loader, device="cpu"):
     plt.tight_layout()
     plt.show()
 
-    # 3. Plot Misclassified Examples
+    # 3. Misclassified Examples
     if misclassified_images:
         num_examples = min(8, len(misclassified_images))
         fig, axes = plt.subplots(1, num_examples, figsize=(14, 2.5))
         for i in range(num_examples):
-            # De-normalize image for visualization: (x * std) + mean
             img = misclassified_images[i].squeeze().numpy() * 0.3081 + 0.1307
             axes[i].imshow(img, cmap='gray')
             axes[i].set_title(f"P: {misclassified_preds[i]} | T: {misclassified_targets[i]}", color='red')
@@ -72,13 +64,9 @@ def evaluate_model(model, test_loader, device="cpu"):
         plt.show()
 
 if __name__ == '__main__':
-    from model import DigitCNN
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     _, test_loader = get_data_loaders(batch_size=64)
 
-    # Load Member 2's trained model
-    model = DigitCNN()
+    model = DigitCNN().to(device)
     model.load_state_dict(torch.load("best_mnist_cnn.pth", map_location=device))
-    
     evaluate_model(model, test_loader, device=device)

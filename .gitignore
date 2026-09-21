@@ -1,1 +1,3 @@
 data
+_pycache_
+best_mnist_cnn.pth

@@ -32,8 +32,6 @@ def get_data_loaders(batch_size=64):
         transform=test_transform
     )
 
-    # Shuffling training data prevents the optimizer from getting stuck in cyclical batch patterns.
-    # Testing data doesn't require shuffling, which ensures reproducible evaluations.
     train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
@@ -43,4 +41,4 @@ if __name__ == '__main__':
     train_loader, test_loader = get_data_loaders(batch_size=32)
     images, labels = next(iter(train_loader))
     print(f"Batch images shape: {images.shape}")  # Should be [32, 1, 28, 28]
-    print(f"Batch labels shape: {labels.shape}")  # Should be [32]
+    print(f"Batch labels shape: {labels.shape}")  # Should be [32]s
